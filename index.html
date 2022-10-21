@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Music House</title>
+</head>
+<body>
+    <div id="app">
+        <div class="wrap">
+            <header>
+            <!-- логотип -->
+            <div id="logo-wrap">
+                <img src="images/logo.png" alt="logo" @click.prevent="currentPage = 'home'">
+            </div>
+            <!-- рубрики -->
+            <nav>
+                <div id="menu">
+                    <a href="" @click.prevent="currentPage = 'home'" >О нас</a>
+                    <a href="" @click.prevent="currentPage = 'catalog'" >Каталог</a>
+                    <a href="" @click.prevent="currentPage = 'contacts'" >Где нас найти?</a>
+                    <a href="" @click.prevent="currentPage = 'orders'"  v-if="isAuth">Корзина</a>
+                </div>
+                
+                <div id="forms">
+                    <a href="" @click.prevent="currentPage = 'register'" v-if="!isAuth">Регистрация</a>
+                    <a href="" @click.prevent="currentPage = 'login'" v-if="!isAuth">Вход</a>
+                    <a href="" @click.prevent="logout"  v-if="isAuth">Выход</a>
+                </div>
+            </nav>
+            </header>
+
+            <!-- контентная часть -->
+            <main>
+                <section v-if="currentPage === 'home'" id="home">
+                    <img src="images/logo.png" alt="logo" id="logo">
+                    <p>Наши музыкальные инструменты найдут путь к вашему сердцу!</p>
+                    <!-- слайдер -->
+                    <div class="slider">
+                        <h2>Новинки компании</h2>
+                        <div class="slider-item">
+                            <button @click="prev" id="prev"><</button>
+                            <div class="slider-product" v-for="(product, id) in products" :key="product.id" v-show="id == slidesVisible">
+                                <img class="photo" alt="music_product" :src="product.image">
+                                <p>{{product.name}}</p>
+                            </div>
+                            <button @click="next" id="next">></button>
+                        </div>
+                    </div>
+                </section>
+                <!-- каталог товаров -->
+                <section v-if="currentPage === 'catalog'" id="catalog">
+                    <h2>Наши товары</h2>
+                    <div id="filter">
+                        <div>
+                        <p>Сортировать по:</p>
+                        <select id="">
+                            <option value="">Год производства</option>
+                            <option value=""> Наименование</option>
+                            <option value="">Цена</option>
+                        </select>
+                        </div>
+                        <div>
+                            <p>Категория:</p>
+                            <select id="">
+                                <option value="">Клавишные</option>
+                                <option value=""> Смычковые</option>
+                                <option value="">Струнные</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="list">
+                        <div class="item" v-for="product in products" :key="product.id">
+                            <img :src="product.image" alt="goods" @click="showProduct(product)">
+                            <p>{{product.name}}</p>
+                            <p>{{product.price}} руб.</p>
+                            <button v-if="isAuth" @click="addProduct(product)">Добавить в корзину</button>
+                        </div>
+                    </div>
+                    
+                </section>
+                <!-- контактные данные -->
+                <section v-if="currentPage === 'contacts'" id="contacts">
+                    <img src="images/map.jpg" alt="map" id="map">
+                    <p>Адрес: ш. Пошехонское, 37</p>
+                    <p>Телефон: 8(928)334-89-13</p>
+                    <p>Email: musichouse@mail.ru</p>
+                </section>
+                <!-- форма регистрации -->
+                <section v-if="currentPage === 'register'" id="signin">
+                    <h2>Создание аккаунта</h2>
+                    <form id="register" @submit.prevent="register">
+                        <p><input type="text" placeholder="Имя" required></p>
+                        <p><input type="text" placeholder="Фамилия" required></p>
+                        <p><input type="text" placeholder="Отчество"></p>
+                        <p><input type="text" placeholder="Логин" required></p>
+                        <p><input type="email" placeholder="Email" required></p>
+                        <p><input type="password" placeholder="Пароль" required></p>
+                        <p><input type="password" placeholder="Повторите пароль" required></p>
+                        <p><input type="checkbox" required><span>Согласие на обработку персональных данных</span></p>
+                        <p><input type="submit" value="Зарегистироваться" required></p>
+                    </form>
+                </section>
+                <!-- форма авторизации -->
+                <section v-if="currentPage === 'login'" id="auth">
+                    <h2>Вход</h2>
+                    <form id="login" @submit.prevent="login">
+                        <p><input type="text" placeholder="Логин" v-model="formLogin.login"></p>
+                        <p><input type="password" placeholder="Пароль"  v-model="formLogin.passowrd"></p>
+                        <p><input type="submit" value="Войти" required></p>
+                    </form>
+                </section>
+                <!-- корзина -->
+                <section v-if="currentPage === 'orders'" id="cart">
+                    <div id="cart_container">
+                        <div class="empty" v-if="cart.length === 0">В корзине ничего нет</div>
+                        <div class="list" id="special" v-for="good in cart" :key="good.id" v-if="cart.length > 0">
+                            <img :src="good.image" alt="product" id="single">
+                            <div id="desc">
+                                <p>Название: {{good.name}}</p>
+                                <p>Цена: {{good.price}} руб.</p>
+                                <p>Страна производитель: {{good.country}}</p>
+                                <p>Год выпуска: {{good.release_date}}</p>
+                                <p>Модель: {{good.model}}</p>
+                                <button @click="">Удалить</button>
+                            </div>
+                        </div>
+                        <div id="order" v-if="cart.length > 0">
+                            <form @submit.prevent="">
+                                <p><input type="password" placeholder="Введите пароль" required></p>
+                                <button>Сформировать заказ</button>
+                            </form>
+                        </div>
+                        
+                    </div>
+                    <div id="myOrders">
+                        <h2>Мои заказы</h2>
+                        <div class="empty" v-if="orders.length === 0">Закажите что-нибудь!</div>
+                        <div class="list" v-for="good in orders" :key="good.id" v-else>
+                           
+                            <img :src="good.image" alt="product" id="single">
+                            <div id="desc">
+                                <p>Название: {{good.name}}</p>
+                                <p>Цена: {{good.price}} руб.</p>
+                                <p>Страна производитель: {{good.country}}</p>
+                                <p>Год выпуска: {{good.release_date}}</p>
+                                <p>Модель: {{good.model}}</p>
+                                <p>Статус: {{good.status}}</p>
+                                <button v-if="isAuth">Удалить заказ</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- отдельная страница товара -->
+                <section id="good" v-if="currentPage === 'good'">
+                        <div class="list" id="special" v-for="good in products" :key="good.id" v-show="good.id == goodIndex">
+                            <img :src="good.image" alt="product" id="single">
+                            <div id="desc">
+                                <p>Название: {{good.name}}</p>
+                                <p>Цена: {{good.price}} руб.</p>
+                                <p>Страна производитель: {{good.country}}</p>
+                                <p>Год выпуска: {{good.release_date}}</p>
+                                <p>Модель: {{good.model}}</p>
+                                <button v-if="isAuth">Добавить в корзину</button>
+                            </div>
+                        </div>
+                </section>
+            </main>
+
+            <!-- футер -->
+            <footer>
+                <p id="copy">&copy; Все права защищены. Misuc House. 2018-2022 г.</p>
+            </footer>
+        </div>
+        
+    </div>
+    <script src="js/vue.3.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+</html>
